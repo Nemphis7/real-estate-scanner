@@ -1,0 +1,41 @@
+name: Real Estate Scanner
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # every hour — change to "0 */2 * * *" for every 2h etc.
+  workflow_dispatch:        # also allows manual trigger from GitHub UI
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # needed to commit listings.json back to repo
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install anthropic
+
+      - name: Run scanner
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ALERT_EMAIL:       ${{ secrets.ALERT_EMAIL }}
+          GMAIL_USER:        ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASS:    ${{ secrets.GMAIL_APP_PASS }}
+          SCAN_CITY:         ${{ vars.SCAN_CITY || 'Köln' }}
+        run: python scanner.py
+
+      - name: Commit updated listings
+        run: |
+          git config user.name  "Real Estate Scanner Bot"
+          git config user.email "scanner@github-actions"
+          git add docs/listings.json
+          git diff --staged --quiet || git commit -m "🏠 Scan update: $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git push
