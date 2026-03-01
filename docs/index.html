@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>🏙️ Real Estate Investment Scanner</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#020617;color:#e2e8f0;font-family:system-ui,sans-serif;padding:16px 12px;min-height:100vh}
+  h1{font-size:20px;font-weight:800;color:#f8fafc;margin-bottom:4px}
+  .sub{color:#475569;font-size:12px;margin-bottom:16px}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center}
+  .pill{background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:8px 14px;font-size:13px;color:#cbd5e1;cursor:pointer;white-space:nowrap}
+  .pill.active{border-color:#3b82f6;color:#93c5fd;background:#1e3a5f}
+  .pill.green.active{border-color:#22c55e;color:#86efac;background:#052e16}
+  .pill.yellow.active{border-color:#f59e0b;color:#fcd34d;background:#1c1008}
+  .pill.red.active{border-color:#ef4444;color:#fca5a5;background:#1c0a0a}
+  input[type=range]{accent-color:#3b82f6;width:120px;vertical-align:middle}
+  .stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .stat{flex:1;min-width:80px;background:#0f172a;border-radius:10px;padding:10px 14px;border:1px solid #1e293b}
+  .stat-label{color:#334155;font-size:10px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
+  .stat-val{font-size:18px;font-weight:700}
+  .table-wrap{background:#0c1527;border:1px solid #1e293b;border-radius:14px;overflow:hidden;margin-bottom:14px}
+  .table-head{display:grid;grid-template-columns:2fr 90px 60px 80px 90px 90px 130px;padding:8px 16px;background:#0f172a;border-bottom:1px solid #1e293b}
+  .table-head span{color:#334155;font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:700}
+  .row{display:grid;grid-template-columns:2fr 90px 60px 80px 90px 90px 130px;padding:10px 16px;border-bottom:1px solid #0f172a;cursor:pointer;border-left:3px solid transparent;transition:background .15s}
+  .row:hover{background:#0f172a}
+  .row.open{background:#111827}
+  .row-title{color:#f1f5f9;font-size:13px;font-weight:600;line-height:1.3}
+  .row-sub{color:#475569;font-size:11px;margin-top:2px}
+  .row-price{color:#f8fafc;font-size:13px;font-weight:700;align-self:center}
+  .row-num{font-size:13px;align-self:center;font-weight:600}
+  .detail{background:#080f1e;border-bottom:1px solid #1e293b;padding:16px 18px}
+  .tabs{display:flex;border-bottom:1px solid #0f172a}
+  .tab{padding:9px 20px;background:none;border:none;border-bottom:2px solid transparent;color:#475569;font-size:13px;cursor:pointer}
+  .tab.active{color:#f1f5f9;font-weight:700}
+  .pills-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .mpill{background:#0f172a;border-radius:8px;padding:6px 10px;text-align:center;min-width:68px}
+  .mpill-label{color:#334155;font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px}
+  .mpill-val{font-size:13px;font-weight:700;color:#94a3b8}
+  .mpill-val.good{color:#22c55e} .mpill-val.bad{color:#ef4444}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .section-title{color:#3b82f6;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px}
+  .pos-list p{color:#94a3b8;font-size:13px;padding-left:10px;border-left:2px solid #166534;margin-bottom:5px;line-height:1.5}
+  .risk-list p{color:#94a3b8;font-size:13px;padding-left:10px;border-left:2px solid #7f1d1d;margin-bottom:5px;line-height:1.5}
+  .cf-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #0f172a;font-size:12px}
+  .cf-row .lbl{color:#475569} .cf-row .val{font-weight:600;color:#cbd5e1}
+  .ret-box{background:#0f172a;border-radius:8px;padding:10px 14px;margin-bottom:8px}
+  .ret-label{color:#475569;font-size:11px;margin-bottom:2px}
+  .ret-val{font-size:20px;font-weight:800}
+  .score-bar{display:flex;gap:2px;align-items:center}
+  .score-seg{width:12px;height:7px;border-radius:2px;background:#1e293b}
+  .verdict{color:#94a3b8;font-size:14px;line-height:1.8;margin-bottom:12px}
+  .view-link{color:#3b82f6;font-size:12px;text-decoration:none;display:inline-block;margin-top:10px}
+  .empty{text-align:center;padding:50px 20px;color:#334155}
+  .empty .ico{font-size:40px;margin-bottom:10px}
+  .slider-row{display:flex;align-items:center;gap:8px;font-size:12px;color:#475569}
+  .slider-val{color:#cbd5e1;font-weight:600;min-width:60px;text-align:right}
+  select{background:#0f172a;border:1px solid #1e293b;border-radius:6px;color:#cbd5e1;padding:4px 8px;font-size:12px;cursor:pointer}
+  .cf-positive{background:rgba(34,197,94,.07);border:1px solid #166534;border-radius:10px;padding:10px 14px;margin-top:4px}
+  .cf-negative{background:rgba(239,68,68,.07);border:1px solid #7f1d1d;border-radius:10px;padding:10px 14px;margin-top:4px}
+  @media(max-width:700px){
+    .table-head,.row{grid-template-columns:1fr 80px 80px 100px}
+    .table-head span:nth-child(n+5),.row>*:nth-child(n+5){display:none}
+  }
+</style>
+</head>
+<body>
+<h1>🏙️ Real Estate Investment Scanner</h1>
+<div class="sub" id="meta">Loading…</div>
+
+<div class="controls">
+  <!-- Filters -->
+  <div class="slider-row">
+    Max Price: <input type="range" id="sl-price" min="50000" max="600000" step="10000" value="300000" oninput="refilter()">
+    <span class="slider-val" id="lbl-price">€300,000</span>
+  </div>
+  <div class="slider-row">
+    Min Yield: <input type="range" id="sl-yield" min="0" max="10" step="0.5" value="0" oninput="refilter()">
+    <span class="slider-val" id="lbl-yield">0%</span>
+  </div>
+  <div class="slider-row">
+    Max €/m²: <input type="range" id="sl-ppm2" min="1000" max="6000" step="100" value="6000" oninput="refilter()">
+    <span class="slider-val" id="lbl-ppm2">Any</span>
+  </div>
+  <button class="pill green active" id="btn-sb"   onclick="toggleRec('Strong Buy',this)">🟢 Strong Buy</button>
+  <button class="pill yellow active" id="btn-wa"  onclick="toggleRec('Watch',this)">🟡 Watch</button>
+  <button class="pill red active" id="btn-pa"     onclick="toggleRec('Pass',this)">🔴 Pass</button>
+  <label class="pill" style="cursor:pointer">
+    <input type="checkbox" id="cb-cf" onchange="refilter()" style="accent-color:#3b82f6"> +CF only
+  </label>
+  <select id="sort-sel" onchange="refilter()">
+    <option value="investment_score">Sort: Score</option>
+    <option value="gross_yield">Sort: Yield</option>
+    <option value="price">Sort: Price ↑</option>
+    <option value="price_per_m2">Sort: €/m²</option>
+    <option value="days_listed">Sort: Newest</option>
+  </select>
+</div>
+
+<div class="stats" id="stats"></div>
+<div class="table-wrap">
+  <div class="table-head">
+    <span>Property</span><span>Price</span><span>m²</span>
+    <span>€/m²</span><span>Gross Yld</span><span>Net Yld</span><span>Score</span>
+  </div>
+  <div id="listings"></div>
+</div>
+
+<p style="color:#1e293b;font-size:11px;text-align:center;margin-top:12px">
+  Net Yield on purchase price · Cash-on-Cash incl. Kaufnebenkosten NRW · Auto-refreshes every 5 min
+</p>
+
+<script>
+// ── CF defaults ──────────────────────────────────────────────────────────────
+const CF = {hausverwaltung_pct:6,instandhaltung_m2:1.5,grundsteuer_m2:3,versicherung_m2:.8,leerstand_pct:3,hausgeld_m2:2,include_makler:false};
+
+function calcCF(l) {
+  const {price,size_m2,monthly_rent}=l;
+  if (!price||!size_m2||!monthly_rent) return null;
+  const gew=price*.065,notar=price*.015,gbuch=price*.005,makler=CF.include_makler?price*.0357:0;
+  const totalNK=gew+notar+gbuch+makler,totalInvest=price+totalNK;
+  const ar=monthly_rent*12;
+  const costs=(ar*CF.hausverwaltung_pct/100)+(size_m2*CF.instandhaltung_m2*12)+(size_m2*CF.grundsteuer_m2)+(size_m2*CF.versicherung_m2)+(ar*CF.leerstand_pct/100)+(size_m2*CF.hausgeld_m2*12);
+  const net=ar-costs;
+  return {gew,notar,gbuch,makler,totalNK,totalInvest,annualRent:ar,totalCosts:costs,netAnnual:net,netMonthly:net/12,netYield:(net/price)*100,coc:(net/totalInvest)*100};
+}
+
+const eur=(n,d=0)=>n==null?"—":"€"+Number(n).toLocaleString("de-DE",{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct=(n,d=1)=>n==null?"—":Number(n).toLocaleString("de-DE",{minimumFractionDigits:d,maximumFractionDigits:d})+"%";
+const RC={"Strong Buy":"#22c55e","Watch":"#f59e0b","Pass":"#ef4444"};
+const RI={"Strong Buy":"🟢","Watch":"🟡","Pass":"🔴"};
+
+let allListings=[], expanded=null, activeTabs={}, visRecs=new Set(["Strong Buy","Watch","Pass"]);
+
+function scoreBar(score) {
+  return `<div class="score-bar">${Array.from({length:10},(_,i)=>`<div class="score-seg" style="background:${i<score?(score>=7?"#22c55e":score>=4?"#f59e0b":"#ef4444"):"#1e293b"}"></div>`).join("")}<span style="color:#475569;font-size:11px;margin-left:3px">${score}/10</span></div>`;
+}
+
+function getFilters() {
+  return {
+    maxPrice: +document.getElementById("sl-price").value,
+    minYield: +document.getElementById("sl-yield").value,
+    maxPpm2:  +document.getElementById("sl-ppm2").value >= 6000 ? Infinity : +document.getElementById("sl-ppm2").value,
+    onlyCF:   document.getElementById("cb-cf").checked,
+    sort:     document.getElementById("sort-sel").value,
+  };
+}
+
+function toggleRec(r, btn) {
+  if (visRecs.has(r)) { visRecs.delete(r); btn.classList.remove("active"); }
+  else { visRecs.add(r); btn.classList.add("active"); }
+  refilter();
+}
+
+function refilter() {
+  const f = getFilters();
+  document.getElementById("lbl-price").textContent = eur(f.maxPrice);
+  document.getElementById("lbl-yield").textContent = pct(f.minYield,1);
+  document.getElementById("lbl-ppm2").textContent  = f.maxPpm2===Infinity?"Any":eur(f.maxPpm2);
+
+  let list = allListings.filter(l => {
+    if (l.price > f.maxPrice) return false;
+    if ((l.gross_yield||0) < f.minYield) return false;
+    if ((l.price_per_m2||0) > f.maxPpm2) return false;
+    if (!visRecs.has(l.recommendation)) return false;
+    if (f.onlyCF) { const c=calcCF(l); if (!c||c.netMonthly<=0) return false; }
+    return true;
+  });
+
+  list.sort((a,b) => {
+    if (f.sort==="price") return a.price-b.price;
+    if (f.sort==="days_listed") return (a.days_listed||999)-(b.days_listed||999);
+    return (b[f.sort]||0)-(a[f.sort]||0);
+  });
+
+  renderStats(list);
+  renderTable(list);
+}
+
+function renderStats(list) {
+  const sb=list.filter(l=>l.recommendation==="Strong Buy").length;
+  const ay=list.length?list.reduce((s,l)=>s+(l.gross_yield||0),0)/list.length:0;
+  const ap=list.length?list.reduce((s,l)=>s+(l.price_per_m2||0),0)/list.length:0;
+  document.getElementById("stats").innerHTML=`
+    <div class="stat"><div class="stat-label">Total in DB</div><div class="stat-val" style="color:#94a3b8">${allListings.length}</div></div>
+    <div class="stat"><div class="stat-label">Showing</div><div class="stat-val" style="color:#3b82f6">${list.length}</div></div>
+    <div class="stat"><div class="stat-label">Strong Buys</div><div class="stat-val" style="color:#22c55e">${sb}</div></div>
+    <div class="stat"><div class="stat-label">Avg Yield</div><div class="stat-val" style="color:${ay>5?"#22c55e":"#f59e0b"}">${pct(ay)}</div></div>
+    <div class="stat"><div class="stat-label">Avg €/m²</div><div class="stat-val" style="color:${ap<3000?"#22c55e":"#94a3b8"}">${eur(Math.round(ap))}</div></div>
+  `;
+}
+
+function renderTable(list) {
+  const el = document.getElementById("listings");
+  if (!list.length) { el.innerHTML=`<div class="empty"><div class="ico">🔍</div><p>No listings match your filters</p></div>`; return; }
+  el.innerHTML = list.map((l,i) => {
+    const cf=calcCF(l), rc=RC[l.recommendation]||"#94a3b8", open=expanded===i;
+    const tab=activeTabs[i]||"overview";
+    return `
+    <div>
+      <div class="row${open?" open":""}" onclick="toggleRow(${i})" style="border-left-color:${rc}">
+        <div>
+          <div class="row-title">${RI[l.recommendation]||""} ${l.title||""}</div>
+          <div class="row-sub">📍 ${l.district||""} · ${l.property_type||""}${l.days_listed!=null?` · 🕐 ${l.days_listed}d`:""}${l.rent_is_estimated?" · est. rent":""}</div>
+        </div>
+        <div class="row-price">${eur(l.price)}</div>
+        <div class="row-num" style="color:#94a3b8">${l.size_m2}</div>
+        <div class="row-num" style="color:${(l.price_per_m2||9999)<3000?"#22c55e":"#94a3b8"}">${eur(Math.round(l.price_per_m2))}</div>
+        <div class="row-num" style="color:${(l.gross_yield||0)>5?"#22c55e":(l.gross_yield||0)>3?"#f59e0b":"#ef4444"}">${pct(l.gross_yield)}</div>
+        <div class="row-num" style="color:${cf&&cf.netYield>3?"#22c55e":cf&&cf.netYield>0?"#f59e0b":"#ef4444"}">${cf?pct(cf.netYield):"—"}</div>
+        <div>${scoreBar(l.investment_score||0)}</div>
+      </div>
+      ${open ? renderDetail(l, i, tab, cf, rc) : ""}
+    </div>`;
+  }).join("");
+}
+
+function renderDetail(l, i, tab, cf, rc) {
+  const ovActive = tab==="overview", cfActive = tab==="cashflow";
+  const overview = `
+    <div class="pills-row">
+      ${mpill("Price",eur(l.price),"","")
+       +mpill("Size",`${l.size_m2}m²`,"","")
+       +mpill("€/m²",eur(Math.round(l.price_per_m2)),(l.price_per_m2||9999)<3000?"good":"","")
+       +mpill("Rent/mo",eur(l.monthly_rent),"","")
+       +mpill("Gross Yield",pct(l.gross_yield),(l.gross_yield||0)>5?"good":"",(l.gross_yield||0)<3?"bad":"")
+       +(cf?mpill("Net Yield",pct(cf.netYield),cf.netYield>3?"good":"",cf.netYield<0?"bad":""):"")
+       +(cf?mpill("Net/mo",eur(cf.netMonthly),cf.netMonthly>0?"good":"",cf.netMonthly<0?"bad":""):"")}
+    </div>
+    <p class="verdict">${l.verdict||""}</p>
+    <div class="two-col">
+      <div><div class="section-title" style="color:#22c55e">✅ Positives</div><div class="pos-list">${(l.key_positives||[]).map(p=>`<p>${p}</p>`).join("")}</div></div>
+      <div><div class="section-title" style="color:#ef4444">⚠️ Risks</div><div class="risk-list">${(l.key_risks||[]).map(r=>`<p>${r}</p>`).join("")}</div></div>
+    </div>
+    ${l.url?`<a class="view-link" href="${l.url}" target="_blank" rel="noopener">🔗 View Listing →</a>`:""}`;
+
+  const cashflow = cf ? `
+    <div class="two-col">
+      <div>
+        <div class="section-title">💸 Acquisition</div>
+        ${cfrow("Purchase Price",eur(l.price))
+         +cfrow("Grunderwerbsteuer (6.5%)",eur(cf.gew),"#f59e0b")
+         +cfrow("Notar (1.5%)",eur(cf.notar),"#f59e0b")
+         +cfrow("Grundbuch (0.5%)",eur(cf.gbuch),"#f59e0b")
+         +cfrow("Nebenkosten Total",eur(cf.totalNK),"#f59e0b")
+         +cfrow("TOTAL INVESTMENT",eur(cf.totalInvest),"#f8fafc")}
+        <div class="section-title" style="margin-top:14px">🏠 Annual Running Costs</div>
+        ${cfrow("Kaltmiete",eur(cf.annualRent),"#22c55e")
+         +cfrow("Hausverwaltung",`-${eur(cf.annualRent*CF.hausverwaltung_pct/100)}`,"#ef4444")
+         +cfrow("Instandhaltungsrücklage",`-${eur(l.size_m2*CF.instandhaltung_m2*12)}`,"#ef4444")
+         +cfrow("Grundsteuer",`-${eur(l.size_m2*CF.grundsteuer_m2)}`,"#ef4444")
+         +cfrow("Versicherung",`-${eur(l.size_m2*CF.versicherung_m2)}`,"#ef4444")
+         +cfrow("Leerstand",`-${eur(cf.annualRent*CF.leerstand_pct/100)}`,"#ef4444")
+         +cfrow("Hausgeld WEG",`-${eur(l.size_m2*CF.hausgeld_m2*12)}`,"#ef4444")
+         +cfrow("Total Costs",`-${eur(cf.totalCosts)}`,"#ef4444")}
+      </div>
+      <div>
+        <div class="section-title">📈 Returns</div>
+        ${retbox("Net Annual",eur(cf.netAnnual),cf.netAnnual>0?"#22c55e":"#ef4444")
+         +retbox("Net Monthly",eur(cf.netMonthly),cf.netMonthly>0?"#22c55e":"#ef4444")
+         +retbox("Gross Yield",pct(l.gross_yield),(l.gross_yield||0)>5?"#22c55e":"#f59e0b")
+         +retbox("Net Yield",pct(cf.netYield),cf.netYield>3?"#22c55e":"#f59e0b")
+         +retbox("Cash-on-Cash",pct(cf.coc),cf.coc>3?"#22c55e":"#f59e0b")}
+        <div class="${cf.netAnnual>0?"cf-positive":"cf-negative"}">
+          <div style="color:${cf.netAnnual>0?"#86efac":"#fca5a5"};font-size:12px;font-weight:700;margin-bottom:3px">${cf.netAnnual>0?"✅ Positive cash flow":"⚠️ Negative cash flow"}</div>
+          <div style="color:#475569;font-size:12px">Net <strong style="color:${cf.netMonthly>0?"#86efac":"#fca5a5"}">${eur(cf.netMonthly)}/month</strong> after all non-recoverable costs.</div>
+        </div>
+      </div>
+    </div>` : `<p style="color:#475569">Insufficient data for cash flow.</p>`;
+
+  return `<div class="detail">
+    <div class="tabs">
+      <button class="tab${ovActive?" active":""}" onclick="setTab(${i},'overview')" style="border-bottom-color:${ovActive?rc:"transparent"}">📋 AI Analysis</button>
+      <button class="tab${cfActive?" active":""}" onclick="setTab(${i},'cashflow')" style="border-bottom-color:${cfActive?rc:"transparent"}">📊 Cash Flow</button>
+      ${l.url?`<a class="view-link" style="margin-left:auto;padding:9px 16px;align-self:center" href="${l.url}" target="_blank" rel="noopener">🔗 View →</a>`:""}
+    </div>
+    <div style="padding:14px 0">
+      ${ovActive?overview:cashflow}
+    </div>
+  </div>`;
+}
+
+function mpill(label,value,good,bad){return `<div class="mpill"><div class="mpill-label">${label}</div><div class="mpill-val${good?" good":bad?" bad":""}">${value}</div></div>`;}
+function cfrow(label,value,color=""){return `<div class="cf-row"><span class="lbl">${label}</span><span class="val"${color?` style="color:${color}"`:""}">${value}</span></div>`;}
+function retbox(label,value,color){return `<div class="ret-box"><div class="ret-label">${label}</div><div class="ret-val" style="color:${color}">${value}</div></div>`;}
+
+function toggleRow(i) { expanded = expanded===i?null:i; refilter(); }
+function setTab(i,t)   { activeTabs[i]=t; refilter(); }
+
+// ── Load data ─────────────────────────────────────────────────────────────────
+async function load() {
+  try {
+    const r = await fetch(`listings.json?t=${Date.now()}`);
+    if (!r.ok) throw new Error("listings.json not found");
+    const data = await r.json();
+    allListings = (data.listings||[]).sort((a,b)=>b.investment_score-a.investment_score);
+    const d = new Date(data.last_scan);
+    document.getElementById("meta").innerHTML =
+      `💾 <strong style="color:#3b82f6">${allListings.length} listings</strong> in database · 
+       📍 ${data.city||"—"} · 
+       🕐 Last scan: ${d.toLocaleString("de-DE")}`;
+    refilter();
+  } catch(e) {
+    document.getElementById("meta").textContent = "⚠️ Could not load listings.json — has the scanner run yet?";
+    document.getElementById("listings").innerHTML = `<div class="empty"><div class="ico">⏳</div><p>Waiting for first scan…</p></div>`;
+  }
+}
+
+load();
+setInterval(load, 5 * 60 * 1000); // auto-refresh every 5 min
+</script>
+</body>
+</html>
